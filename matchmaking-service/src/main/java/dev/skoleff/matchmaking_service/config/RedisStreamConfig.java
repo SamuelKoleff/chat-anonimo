@@ -1,18 +1,18 @@
-package dev.skoleff.user_session_service.infrastructure.config;
+package dev.skoleff.matchmaking_service.config;
 
-import dev.skoleff.user_session_service.domain.model.UserSession;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.data.redis.connection.stream.MapRecord;
+import org.springframework.data.redis.stream.StreamMessageListenerContainer;
+
+import java.time.Duration;
 
 @Configuration
-public class RedisConfig {
+public class RedisStreamConfig {
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory(
@@ -24,17 +24,18 @@ public class RedisConfig {
         config.setHostName(host);
         config.setPort(port);
         config.setDatabase(database);
-
         return new LettuceConnectionFactory(config);
     }
 
-
     @Bean
-    public RedisTemplate<String, UserSession> redisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, UserSession> template = new RedisTemplate<>();
-        template.setConnectionFactory(connectionFactory);
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        return template;
+    public StreamMessageListenerContainer<String, MapRecord<String, String, String>>
+    streamListener(RedisConnectionFactory factory) {
+
+        var options = StreamMessageListenerContainer
+                .StreamMessageListenerContainerOptions.builder()
+                .pollTimeout(Duration.ofSeconds(1))
+                .build();
+
+        return StreamMessageListenerContainer.create(factory, options);
     }
 }
