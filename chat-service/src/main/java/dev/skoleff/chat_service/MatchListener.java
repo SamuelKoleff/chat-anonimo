@@ -1,8 +1,10 @@
 package dev.skoleff.chat_service;
 
+import dev.skoleff.common_events.RoomCreatedEvent;
 import dev.skoleff.common_events.UserMatchedEvent;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -13,9 +15,11 @@ import java.util.UUID;
 public class MatchListener {
 
     private final RedisTemplate<String, Object> redisTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public MatchListener(RedisTemplate<String, Object> redisTemplate) {
+    public MatchListener(RedisTemplate<String, Object> redisTemplate, KafkaTemplate<String, Object> kafkaTemplate) {
         this.redisTemplate = redisTemplate;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     @KafkaListener(topics = "user.matched", groupId = "chat-service")
@@ -35,7 +39,6 @@ public class MatchListener {
         System.out.println("💬 Nuevo chat creado para " + event.user1() + " y " + event.user2());
         System.out.println("➡️ Room: " + room);
 
-        // Opcional: enviar un evento Kafka con la info del chat
-        // kafkaTemplate.send("chat.room.created", new ChatRoomCreatedEvent(event.user1(), event.user2(), matchId, room));
+        kafkaTemplate.send("room.created", new RoomCreatedEvent(event.user1(), event.user2(), matchId));
     }
 }

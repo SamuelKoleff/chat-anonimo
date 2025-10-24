@@ -24,5 +24,10 @@ public class KafkaConfig {
     public NewTopic userMatchedTopic() {
         return new NewTopic("user.matched", 1, (short) 1);
     }
+
+    @Bean
+    public NewTopic roomCreatedTopic(){
+        return new NewTopic("room.created", 1, (short) 1);
+    }
 }
 

@@ -1,6 +1,6 @@
 package dev.skoleff.matchmaking_service;
 
-import dev.skoleff.UserAvailableEvent;
+import dev.skoleff.common_events.UserAvailableEvent;
 import dev.skoleff.common_events.UserMatchedEvent;
 import jakarta.annotation.PostConstruct;
 import org.springframework.data.redis.connection.stream.*;
