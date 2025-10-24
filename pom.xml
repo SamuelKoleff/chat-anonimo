@@ -16,6 +16,7 @@
         <module>matchmaking-service</module>
         <module>user-session-service</module>
         <module>chat-service</module>
+        <module>common-events</module>
     </modules>
 
     <properties>

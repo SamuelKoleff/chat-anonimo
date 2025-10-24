@@ -26,7 +26,19 @@ public class SessionController {
 
     @PutMapping("/{id}/status")
     public void setStatus(@PathVariable("id") String sessionId, @RequestParam String status) {
-        service.setStatus(sessionId, status);
+        switch (status){
+            case "AVAILABLE":
+                service.setAvailable(sessionId);
+                break;
+            case "MATCHED":
+                service.setMatched(sessionId);
+                break;
+            case "DISCONNECT":
+                service.setDisconnected(sessionId);
+                break;
+            default:
+                //no
+        }
     }
 
     @DeleteMapping("/{id}")

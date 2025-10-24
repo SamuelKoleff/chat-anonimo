@@ -1,7 +1,9 @@
 package dev.skoleff.user_session_service.application;
 
+import dev.skoleff.UserAvailableEvent;
 import dev.skoleff.user_session_service.domain.model.UserSession;
 import dev.skoleff.user_session_service.domain.repository.UserSessionRepository;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -10,9 +12,11 @@ import java.time.Instant;
 public class SessionService {
 
     private final UserSessionRepository repository;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public SessionService(UserSessionRepository repository) {
+    public SessionService(UserSessionRepository repository, KafkaTemplate<String, Object> kafkaTemplate) {
         this.repository = repository;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     public void createSession(UserSession session) {
@@ -25,11 +29,30 @@ public class SessionService {
         return repository.findById(sessionId).orElse(null);
     }
 
-    public void setStatus(String sessionId, String status) {
-        UserSession s = getSession(sessionId);
-        if (s != null) {
-            s.setStatus(status);
-            repository.save(s);
+
+    public void setAvailable(String sessionId){
+        UserSession session = getSession(sessionId);
+        if(session != null){
+            session.setStatus("AVAILABLE");
+            repository.save(session);
+            kafkaTemplate.send("user.available", new UserAvailableEvent(sessionId));
+            System.out.println("setting " + sessionId + " available and sending event");
+        }
+    }
+
+    public void setMatched(String sessionId){
+        UserSession session = getSession(sessionId);
+        if(session != null){
+            session.setStatus("MATCHED");
+            repository.save(session);
+        }
+    }
+
+    public void setDisconnected(String sessionId){
+        UserSession session = getSession(sessionId);
+        if(session != null){
+            session.setStatus("DISCONNECTED");
+            repository.save(session);
         }
     }
 

@@ -1,9 +1,13 @@
 package dev.skoleff.matchmaking_service;
 
+import dev.skoleff.UserAvailableEvent;
+import dev.skoleff.common_events.UserMatchedEvent;
 import jakarta.annotation.PostConstruct;
 import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.stream.*;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +21,15 @@ import java.util.UUID;
 public class MatchmakingProcessor {
 
     private final StringRedisTemplate redisTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+
     private static final String STREAM_KEY = "matchmaking:queue";
     private static final Duration MATCH_TTL = Duration.ofHours(1);
     private static final int STREAM_MAX_LENGTH = 1000;
 
-    public MatchmakingProcessor(StringRedisTemplate redisTemplate) {
+    public MatchmakingProcessor(StringRedisTemplate redisTemplate, KafkaTemplate<String, Object> kafkaTemplate) {
         this.redisTemplate = redisTemplate;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     @PostConstruct
@@ -33,6 +40,19 @@ public class MatchmakingProcessor {
         } catch (Exception e) {
             //Ignore si ya existe el grupo
         }
+    }
+
+    @KafkaListener(topics = "user.available", groupId = "matchmaking")
+    public void onUserAvailable(UserAvailableEvent event) {
+        String sessionId = event.sessionId();
+        System.out.println("Recibido user.available desde Kafka: " + sessionId);
+
+        Map<String, String> data = Map.of("sessionId", sessionId);
+
+        redisTemplate.opsForStream().add(STREAM_KEY, data);
+        redisTemplate.opsForSet().add("matchmaking:waiting", sessionId);
+
+        System.out.println("Usuario " + sessionId + " agregado a la cola Redis");
     }
 
     @Scheduled(fixedDelay = 2000)
@@ -63,12 +83,22 @@ public class MatchmakingProcessor {
     }
 
     private List<MapRecord<String, Object, Object>> readPendingMessages() {
-        List<MapRecord<String, Object, Object>> records = redisTemplate.opsForStream()
-                .read(Consumer.from("matchmaking-group", "worker-1"),
-                        StreamReadOptions.empty().count(10),
-                        StreamOffset.create(STREAM_KEY, ReadOffset.from("0")));
-        return records != null ? records : List.of();
+        try {
+            return redisTemplate.opsForStream().read(
+                    Consumer.from("matchmaking-group", "worker-1"),
+                    StreamReadOptions.empty().count(10),
+                    StreamOffset.create(STREAM_KEY, ReadOffset.from("0"))
+            );
+        } catch (Exception e) {
+            if (e.getMessage() != null && e.getMessage().contains("NOGROUP")) {
+                System.out.println("Grupo no existe, creando...");
+                redisTemplate.opsForStream()
+                        .createGroup(STREAM_KEY, ReadOffset.latest(), "matchmaking-group");
+            }
+            return List.of();
+        }
     }
+
 
     private List<MapRecord<String, Object, Object>> readNewMessages() {
         List<MapRecord<String, Object, Object>> records = redisTemplate.opsForStream()
@@ -91,6 +121,7 @@ public class MatchmakingProcessor {
         ));
 
         redisTemplate.expire(matchKey, MATCH_TTL);
+        kafkaTemplate.send("user.matched", new UserMatchedEvent(session1, session2));
 
         System.out.printf("Match creado: %s entre %s y %s%n", matchId, session1, session2);
     }
