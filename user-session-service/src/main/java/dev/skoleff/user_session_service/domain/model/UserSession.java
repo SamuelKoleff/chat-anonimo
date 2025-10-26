@@ -12,10 +12,10 @@ public class UserSession {
 
     public UserSession() {}
 
-    public UserSession(String sessionId, String userId, String status) {
+    public UserSession(String sessionId, String userId) {
         this.sessionId = sessionId;
         this.userId = userId;
-        this.status = status;
+        this.status = "UP";
         this.roomId = null;
         this.createdAt = Instant.now().toString();
         this.lastPing = Instant.now().toString();

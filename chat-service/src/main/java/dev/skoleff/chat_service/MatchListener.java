@@ -36,8 +36,8 @@ public class MatchListener {
 
         String room = "/topic/match/" + matchId;
 
-        System.out.println("💬 Nuevo chat creado para " + event.user1() + " y " + event.user2());
-        System.out.println("➡️ Room: " + room);
+        System.out.println("Nuevo chat creado para " + event.user1() + " y " + event.user2());
+        System.out.println("Room: " + room);
 
         kafkaTemplate.send("room.created", new RoomCreatedEvent(event.user1(), event.user2(), matchId));
     }

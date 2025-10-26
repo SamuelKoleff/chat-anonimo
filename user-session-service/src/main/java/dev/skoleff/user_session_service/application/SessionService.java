@@ -25,6 +25,7 @@ public class SessionService {
     public void createSession(UserSession session) {
         session.setCreatedAt(Instant.now().toString());
         session.setLastPing(Instant.now().toString());
+        session.setStatus("UP");
         repository.save(session);
     }
 
@@ -96,7 +97,7 @@ public class SessionService {
 
         if(userSession1  != null && userSession2 != null){
             setMatched(userSession1.getSessionId());
-            setMatched(userSession1.getSessionId());
+            setMatched(userSession2.getSessionId());
             System.out.println("user.matched event: \n" + userSession1.toString() + "\n" + userSession2.toString());
         }
     }

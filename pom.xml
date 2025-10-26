@@ -17,6 +17,7 @@
         <module>user-session-service</module>
         <module>chat-service</module>
         <module>common-events</module>
+        <module>ui</module>
     </modules>
 
     <properties>

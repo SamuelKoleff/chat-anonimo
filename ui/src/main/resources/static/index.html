@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Chat - Usuario y Sesión</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Sistema de Chat con Gestión de Usuarios</h1>
+        <p>Registro de usuario, cola de espera y chat en tiempo real</p>
+    </header>
+    
+    <div class="container">
+        <div class="panel">
+            <div class="form-section">
+                <h2>Gestión de Usuario</h2>
+                
+                <div class="form-group">
+                    <label for="userId">ID de Usuario:</label>
+                    <input type="text" id="userId" placeholder="Ej: user123">
+                </div>
+                
+                <div class="form-group">
+                    <label for="sessionId">ID de Sesión:</label>
+                    <input type="text" id="sessionId" placeholder="Ej: ses123">
+                </div>
+                
+                <button id="registerBtn" class="success-btn">Registrar Usuario</button>
+                <button id="joinQueueBtn" class="warning-btn" disabled>Unirse a Cola</button>
+                <button id="checkStatusBtn" disabled>Verificar Estado</button>
+                <button id="disconnectUserBtn" class="danger-btn" disabled>Desconectar Usuario</button>
+                
+                <div id="userStatus" class="status disconnected">No registrado</div>
+                
+                <div class="info-section">
+                    <h3>Información de Sesión</h3>
+                    <div class="info-item">
+                        <span class="info-label">ID de Sesión:</span>
+                        <span id="infoSessionId">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">ID de Usuario:</span>
+                        <span id="infoUserId">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Estado:</span>
+                        <span id="infoStatus">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Room ID:</span>
+                        <span id="infoRoomId">-</span>
+                    </div>
+                </div>
+                
+                <div class="log-container" id="userLog"></div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <div class="form-section">
+                <h2>Chat en Tiempo Real</h2>
+                
+                <div class="form-group">
+                    <label for="chatRoomId">Room ID (se autocompleta):</label>
+                    <input type="text" id="chatRoomId" placeholder="Se completará automáticamente" disabled>
+                </div>
+                
+                <button id="connectChatBtn" class="success-btn" disabled>Conectar Chat</button>
+                <button id="disconnectChatBtn" class="danger-btn" style="display: none;">Desconectar Chat</button>
+                
+                <div id="chatStatus" class="status disconnected">Desconectado</div>
+                
+                <div class="chat-container">
+                    <div id="messages" class="messages"></div>
+                    <div class="message-input">
+                        <input type="text" id="messageInput" placeholder="Escribe tu mensaje..." disabled>
+                        <button id="sendBtn" disabled>Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts para WebSocket -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    
+    <!-- Nuestros scripts -->
+    <script src="app.js"></script>
+</body>
+</html>
