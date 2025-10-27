@@ -25,7 +25,7 @@ public class SessionService {
     public void createSession(UserSession session) {
         session.setCreatedAt(Instant.now().toString());
         session.setLastPing(Instant.now().toString());
-        session.setStatus("UP");
+        session.setStatusUp();
         repository.save(session);
     }
 
@@ -34,33 +34,41 @@ public class SessionService {
     }
 
 
-    public void setAvailable(String sessionId){
+    public void setSessionStatusAvailable(String sessionId){
         UserSession session = getSession(sessionId);
         if(session != null){
-            session.setStatus("AVAILABLE");
+            session.setStatusAvailable();
             repository.save(session);
             kafkaTemplate.send("user.available", new UserAvailableEvent(sessionId));
             System.out.println("setting " + sessionId + " available and sending event");
         }
     }
 
-    public void setMatched(String sessionId){
+    public void setSessionStatusMatched(String sessionId){
         UserSession session = getSession(sessionId);
         if(session != null){
-            session.setStatus("MATCHED");
+            session.setStatusMathed();
             repository.save(session);
         }
     }
 
-    public void setDisconnected(String sessionId){
+    public void setSessionStatusDisconnected(String sessionId){
         UserSession session = getSession(sessionId);
         if(session != null){
-            session.setStatus("DISCONNECTED");
+            session.setStatusDisconnectd();
             repository.save(session);
         }
     }
 
-    public void setRoomId(String sessionId,String roomId){
+    public void setSessionStatusUp(String sessionId){
+        UserSession session = getSession(sessionId);
+        if(session != null){
+            session.setStatusUp();
+            repository.save(session);
+        }
+    }
+
+    public void setRoomId(String sessionId, String roomId){
         UserSession session = getSession(sessionId);
         if(session != null && roomId != null){
             session.setRoomId(roomId);
@@ -78,8 +86,8 @@ public class SessionService {
 
     @KafkaListener(topics = "room.created", groupId = "user-session-service")
     public void onRoomCreated(RoomCreatedEvent event){
-        UserSession userSession1 = getSession(event.user1());
-        UserSession userSession2 = getSession(event.user2());
+        UserSession userSession1 = getSession(event.sessionId1());
+        UserSession userSession2 = getSession(event.sessionId2());
 
         if(userSession1  != null && userSession2 != null && event.roomId() != null){
             userSession1.setRoomId(event.roomId());
@@ -90,17 +98,20 @@ public class SessionService {
         }
     }
 
+
     @KafkaListener(topics = "user.matched", groupId = "user-session-service")
     public void onUserMatched(UserMatchedEvent event){
-        UserSession userSession1 = getSession(event.user1());
-        UserSession userSession2 = getSession(event.user2());
+        UserSession userSession1 = getSession(event.sessionId1());
+        UserSession userSession2 = getSession(event.sessionId2());
 
         if(userSession1  != null && userSession2 != null){
-            setMatched(userSession1.getSessionId());
-            setMatched(userSession2.getSessionId());
+            setSessionStatusMatched(userSession1.getSessionId());
+            setSessionStatusMatched(userSession2.getSessionId());
             System.out.println("user.matched event: \n" + userSession1.toString() + "\n" + userSession2.toString());
         }
     }
+
+
 
 
     public void deleteSession(String sessionId) {

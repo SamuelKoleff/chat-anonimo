@@ -1,4 +1,4 @@
 package dev.skoleff.common_events;
 
-public record UserMatchedEvent(String user1, String user2) { }
+public record UserMatchedEvent(String sessionId1, String sessionId2) { }
 

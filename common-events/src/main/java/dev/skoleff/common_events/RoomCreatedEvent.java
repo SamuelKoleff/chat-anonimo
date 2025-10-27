@@ -1,4 +1,4 @@
 package dev.skoleff.common_events;
 
-public record RoomCreatedEvent(String user1, String user2, String roomId) {
+public record RoomCreatedEvent(String sessionId1, String sessionId2, String roomId) {
 }

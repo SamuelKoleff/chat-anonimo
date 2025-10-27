@@ -28,13 +28,16 @@ public class SessionController {
     public void setStatus(@PathVariable("id") String sessionId, @RequestParam String status) {
         switch (status){
             case "AVAILABLE":
-                service.setAvailable(sessionId);
+                service.setSessionStatusAvailable(sessionId);
                 break;
             case "MATCHED":
-                service.setMatched(sessionId);
+                service.setSessionStatusMatched(sessionId);
                 break;
             case "DISCONNECT":
-                service.setDisconnected(sessionId);
+                service.setSessionStatusDisconnected(sessionId);
+                break;
+            case "UP":
+                service.setSessionStatusUp(sessionId);
                 break;
             default:
                 //no

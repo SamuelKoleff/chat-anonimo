@@ -196,7 +196,7 @@ function connectChat() {
     }
     
     // URL base del WebSocket
-    const socketUrl = 'http://localhost:8080/chat-service/gs-guide-websocket';
+    const socketUrl = 'http://localhost:8080/chat-service/websocket';
     
     // Crear cliente SockJS
     const socket = new SockJS(socketUrl);

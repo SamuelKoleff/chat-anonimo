@@ -28,17 +28,17 @@ public class MatchListener {
 
         String key = "match:" + matchId;
         redisTemplate.opsForHash().putAll(key, Map.of(
-                "user1", event.user1(),
-                "user2", event.user2(),
+                "session1", event.sessionId1(),
+                "session2", event.sessionId2(),
                 "createdAt", Instant.now().toString()
         ));
         redisTemplate.expire(key, java.time.Duration.ofHours(1));
 
         String room = "/topic/match/" + matchId;
 
-        System.out.println("Nuevo chat creado para " + event.user1() + " y " + event.user2());
+        System.out.println("Nuevo chat creado para " + event.sessionId1() + " y " + event.sessionId2());
         System.out.println("Room: " + room);
 
-        kafkaTemplate.send("room.created", new RoomCreatedEvent(event.user1(), event.user2(), matchId));
+        kafkaTemplate.send("room.created", new RoomCreatedEvent(event.sessionId1(), event.sessionId2(), matchId));
     }
 }

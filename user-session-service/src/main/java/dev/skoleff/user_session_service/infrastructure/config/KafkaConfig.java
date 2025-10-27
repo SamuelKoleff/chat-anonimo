@@ -26,6 +26,13 @@ public class KafkaConfig {
     }
 
     @Bean
+    public NewTopic userExitMatchTopic() {
+        return new NewTopic("user.exit_match", 1, (short) 1);
+    }
+
+
+
+    @Bean
     public NewTopic roomCreatedTopic(){
         return new NewTopic("room.created", 1, (short) 1);
     }
