@@ -18,8 +18,7 @@ public class WebSocketEventListener {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         String sessionId = accessor.getSessionId();
         logger.info("Session disconnected: {}", sessionId);
-
-        // limpiar room, avisar al otro jugador, borrar info de matchmaking, etc.
+        
     }
 
     @EventListener
@@ -27,7 +26,5 @@ public class WebSocketEventListener {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         String sessionId = accessor.getSessionId();
         logger.info("Session unsubscribed: {}", sessionId);
-
-        //
     }
 }

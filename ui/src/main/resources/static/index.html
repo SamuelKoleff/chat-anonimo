@@ -3,91 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Chat - Usuario y Sesión</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Chat Reactivo</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        input, button { margin: 5px; padding: 5px; }
+        .status { padding: 5px; margin: 5px 0; display: inline-block; }
+        .up { color: white; background : blue; }
+        .matched { color: white; background: green; }
+        .waiting { color: white; background: orange; }
+        .disconnected { color: white; background: gray; }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Sistema de Chat con Gestión de Usuarios</h1>
-        <p>Registro de usuario, cola de espera y chat en tiempo real</p>
-    </header>
-    
-    <div class="container">
-        <div class="panel">
-            <div class="form-section">
-                <h2>Gestión de Usuario</h2>
-                
-                <div class="form-group">
-                    <label for="userId">ID de Usuario:</label>
-                    <input type="text" id="userId" placeholder="Ej: user123">
-                </div>
-                
-                <div class="form-group">
-                    <label for="sessionId">ID de Sesión:</label>
-                    <input type="text" id="sessionId" placeholder="Ej: ses123">
-                </div>
-                
-                <button id="registerBtn" class="success-btn">Registrar Usuario</button>
-                <button id="joinQueueBtn" class="warning-btn" disabled>Unirse a Cola</button>
-                <button id="checkStatusBtn" disabled>Verificar Estado</button>
-                <button id="disconnectUserBtn" class="danger-btn" disabled>Desconectar Usuario</button>
-                
-                <div id="userStatus" class="status disconnected">No registrado</div>
-                
-                <div class="info-section">
-                    <h3>Información de Sesión</h3>
-                    <div class="info-item">
-                        <span class="info-label">ID de Sesión:</span>
-                        <span id="infoSessionId">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">ID de Usuario:</span>
-                        <span id="infoUserId">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Estado:</span>
-                        <span id="infoStatus">-</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Room ID:</span>
-                        <span id="infoRoomId">-</span>
-                    </div>
-                </div>
-                
-                <div class="log-container" id="userLog"></div>
-            </div>
-        </div>
-        
-        <div class="panel">
-            <div class="form-section">
-                <h2>Chat en Tiempo Real</h2>
-                
-                <div class="form-group">
-                    <label for="chatRoomId">Room ID (se autocompleta):</label>
-                    <input type="text" id="chatRoomId" placeholder="Se completará automáticamente" disabled>
-                </div>
-                
-                <button id="connectChatBtn" class="success-btn" disabled>Conectar Chat</button>
-                <button id="disconnectChatBtn" class="danger-btn" style="display: none;">Desconectar Chat</button>
-                
-                <div id="chatStatus" class="status disconnected">Desconectado</div>
-                
-                <div class="chat-container">
-                    <div id="messages" class="messages"></div>
-                    <div class="message-input">
-                        <input type="text" id="messageInput" placeholder="Escribe tu mensaje..." disabled>
-                        <button id="sendBtn" disabled>Enviar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Scripts para WebSocket -->
-    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-    
-    <!-- Nuestros scripts -->
-    <script src="app.js"></script>
+<h2>Chat Reactivo con SockJS</h2>
+
+<div>
+    <button id="connectBtn">Conectar (UP)</button>
+    <button id="joinQueueBtn" disabled>Unirse a Cola (AVAILABLE)</button>
+    <button id="disconnectBtn" disabled>Desconectar</button>
+</div>
+
+<div id="status" class="status">No registrado</div>
+<div>
+    <strong>Room:</strong> <span id="roomId">-</span>
+</div>
+
+<div>
+    <button id="connectChatBtn" disabled>Conectar Chat</button>
+    <button id="disconnectChatBtn" style="display:none;">Desconectar Chat</button>
+</div>
+
+<div id="chat" style="display:none;">
+    <input type="text" id="messageInput" placeholder="Mensaje...">
+    <button id="sendBtn">Enviar</button>
+    <div id="messages" style="border:1px solid #ccc; padding:5px; height:200px; overflow:auto;"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script src="main.js"></script>
+
 </body>
 </html>

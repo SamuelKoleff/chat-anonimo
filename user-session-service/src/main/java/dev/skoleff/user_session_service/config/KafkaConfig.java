@@ -1,4 +1,4 @@
-package dev.skoleff.user_session_service.infrastructure.config;
+package dev.skoleff.user_session_service.config;
 
 
 import org.apache.kafka.clients.admin.NewTopic;

@@ -8,8 +8,6 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class MatchChatController {
 
-
-
     @MessageMapping("/match/{matchId}")
     @SendTo("/topic/match/{matchId}")
     public ChatMessage sendMessage(@DestinationVariable String matchId, ChatMessage message) {

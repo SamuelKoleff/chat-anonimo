@@ -36,7 +36,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .withSockJS().setSuppressCors(true);
     }
 
-
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(new MyChannelInterceptor());
