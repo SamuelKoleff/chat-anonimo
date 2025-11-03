@@ -1,8 +1,10 @@
 package dev.skoleff.chat_service;
 
+import dev.skoleff.common_events.UserDisconnectedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
@@ -18,7 +20,6 @@ public class WebSocketEventListener {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         String sessionId = accessor.getSessionId();
         logger.info("Session disconnected: {}", sessionId);
-        
     }
 
     @EventListener

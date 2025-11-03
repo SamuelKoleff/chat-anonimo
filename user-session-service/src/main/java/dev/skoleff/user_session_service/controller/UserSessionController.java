@@ -9,19 +9,21 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.time.Duration;
-import java.util.Objects;
+import reactor.core.publisher.Sinks;
 
 @RestController
 @RequestMapping("/sessions")
 public class UserSessionController {
-    private final KafkaTemplate kafkaTemplate;
-    private final ReactiveRedisOperations<String, UserSession> userSessionOps;
 
-    public UserSessionController(KafkaTemplate kafkaTemplate, ReactiveRedisOperations<String, UserSession> userSessionOps) {
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final ReactiveRedisOperations<String, UserSession> userSessionOps;
+    private final Sinks.Many<UserSession> updatesSink;
+
+
+    public UserSessionController(KafkaTemplate<String,Object> kafkaTemplate, ReactiveRedisOperations<String, UserSession> userSessionOps, Sinks.Many<UserSession> updatesSink) {
         this.kafkaTemplate = kafkaTemplate;
         this.userSessionOps = userSessionOps;
+        this.updatesSink = updatesSink;
     }
 
     @PostMapping
@@ -41,10 +43,11 @@ public class UserSessionController {
 
     @GetMapping(value = "/{id}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<UserSession> streamSession(@PathVariable("id") String sessionId) {
-        return Flux.interval(Duration.ofSeconds(1))
-                .flatMap(tick -> userSessionOps.opsForValue().get(sessionId))
-                .filter(Objects::nonNull);
+        return updatesSink.asFlux()
+                .filter(s -> s.sessionId().equals(sessionId))
+                .doOnSubscribe(sub -> System.out.println("Client is listening " + sessionId));
     }
+
 
     @PutMapping("/{id}/status")
     public Mono<Void> setStatus(@PathVariable("id") String sessionId, @RequestParam Status status) {
@@ -53,26 +56,27 @@ public class UserSessionController {
                 .flatMap(s -> {
                     UserSession updated = s.withStatus(status).withLastPingNow();
 
-                    Mono<Boolean> saveMono = userSessionOps.opsForValue().set(sessionId, updated);
-
-                    Mono<Void> kafkaMono = Mono.fromRunnable(() -> {
-                        if (status == Status.AVAILABLE) {
-                            kafkaTemplate.send("user.available", new UserAvailableEvent(sessionId));
-                            System.out.println("setting " + sessionId + " available and sending event");
-                        }
-                    });
-
-                    return saveMono.then(kafkaMono);
+                    return userSessionOps.opsForValue()
+                            .set(sessionId, updated)
+                            .then(Mono.fromRunnable(() -> {
+                                updatesSink.tryEmitNext(updated);
+                                if (status == Status.AVAILABLE) {
+                                    kafkaTemplate.send("user.available", new UserAvailableEvent(sessionId));
+                                }
+                            }));
                 });
     }
+
 
     @PutMapping("/{id}/room")
     public Mono<Void> setRoom(@PathVariable("id") String sessionId, @RequestParam String roomId) {
         return userSessionOps.opsForValue()
                 .get(sessionId)
-                .flatMap(s -> userSessionOps.opsForValue()
-                        .set(sessionId, s.withRoomId(roomId).withLastPingNow()))
-                .then();
+                .flatMap(s -> {
+                    UserSession updated = s.withRoomId(roomId).withLastPingNow();
+                    return userSessionOps.opsForValue().set(sessionId, updated)
+                            .then(Mono.fromRunnable(() -> updatesSink.tryEmitNext(updated)));
+                });
     }
 
     @DeleteMapping("/{id}")

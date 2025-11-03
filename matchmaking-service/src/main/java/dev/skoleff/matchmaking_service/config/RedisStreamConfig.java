@@ -7,6 +7,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.stream.MapRecord;
+import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 
 import java.time.Duration;
@@ -28,14 +29,18 @@ public class RedisStreamConfig {
     }
 
     @Bean
-    public StreamMessageListenerContainer<String, MapRecord<String, String, String>>
-    streamListener(RedisConnectionFactory factory) {
+    public StreamMessageListenerContainer<String, MapRecord<String, String, String>> streamListener(
+            RedisConnectionFactory factory) {
 
-        var options = StreamMessageListenerContainer
-                .StreamMessageListenerContainerOptions.builder()
+        var options = StreamMessageListenerContainer.StreamMessageListenerContainerOptions
+                .<String, MapRecord<String, String, String>>builder()
                 .pollTimeout(Duration.ofSeconds(1))
                 .build();
 
-        return StreamMessageListenerContainer.create(factory, options);
+        var container = StreamMessageListenerContainer.create(factory, options);
+        container.start();
+        return container;
     }
+
+
 }

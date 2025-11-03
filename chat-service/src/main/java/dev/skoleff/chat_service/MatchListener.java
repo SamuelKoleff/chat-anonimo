@@ -19,10 +19,7 @@ public class MatchListener {
 
     @KafkaListener(topics = "user.matched", groupId = "chat-service")
     public void onUserMatched(UserMatchedEvent event) {
-        String matchId = UUID.randomUUID().toString();
-
-        String room = "/topic/match/" + matchId;
-
-        kafkaTemplate.send("room.created", new RoomCreatedEvent(event.sessionId1(), event.sessionId2(), matchId));
+        String room = "/topic/match/" + event.matchId();
+        kafkaTemplate.send("room.created", new RoomCreatedEvent(event.sessionId1(), event.sessionId2(),event.matchId()));
     }
 }

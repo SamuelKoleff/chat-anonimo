@@ -4,25 +4,39 @@ let roomId = '';
 let stompClient = null;
 let eventSource = null;
 
-const connectBtn = document.getElementById('connectBtn');
-const joinQueueBtn = document.getElementById('joinQueueBtn');
-const disconnectBtn = document.getElementById('disconnectBtn');
+const searchBtn = document.getElementById('searchBtn');
+const leaveBtn = document.getElementById('leaveBtn');
 const statusDiv = document.getElementById('status');
 const roomSpan = document.getElementById('roomId');
-const connectChatBtn = document.getElementById('connectChatBtn');
-const disconnectChatBtn = document.getElementById('disconnectChatBtn');
 const chatDiv = document.getElementById('chat');
 const messagesDiv = document.getElementById('messages');
 const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 
-function updateStatus(statusText, className) {
-    statusDiv.textContent = statusText;
+function updateStatus(text, className) {
+    statusDiv.textContent = text;
     statusDiv.className = 'status ' + className;
 }
 
 async function setSessionStatus(status) {
-    await fetch(`http://localhost:8080/user-session-service/sessions/${sessionId}/status?status=${status}`, { method: 'PUT' });
+    console.log("SET STATUS", status);
+    await fetch(`http://localhost:8080/user-session-service/sessions/${sessionId}/status?status=${status}`, {
+        method: 'PUT'
+    });
+}
+
+async function registerSession() {
+    console.log("REGISTER");
+    await fetch(`http://localhost:8080/user-session-service/sessions`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ sessionId, userId })
+    });
+
+    updateStatus('Conectado (UP)', 'up');
+    searchBtn.disabled = false;
+
+    subscribeToSessionUpdates();
 }
 
 function subscribeToSessionUpdates() {
@@ -30,56 +44,48 @@ function subscribeToSessionUpdates() {
 
     eventSource.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        console.log('Session update:', data);
+        console.log("SSE Update:", data);
 
-        if(data.matched && data.roomId){
+        const status = data.status;
+
+        if (status === 'MATCHED' && data.roomId) {
             roomId = data.roomId;
             roomSpan.textContent = roomId;
             updateStatus('Emparejado', 'matched');
-            connectChatBtn.disabled = false;
-        } else if(data.available){
-            updateStatus('En cola', 'waiting');
-        } else if(data.up){
-            updateStatus('Registrado (UP)', 'up');
-        } else {
-            updateStatus('Desconectado', 'disconnected');
+            connectChat();  // auto connect
+            return;
+        }
+
+        if (status === 'AVAILABLE') {
+            updateStatus('Buscando…', 'waiting');
+            return;
+        }
+
+        if (status === 'UP') {
+            updateStatus('Conectado', 'up');
+
+            if (stompClient != null) {
+                console.log("AUTO-DISCONNECT WebSocket (status changed to UP)");
+                leaveChat();
+                window.alert('El usuario se ha desconectado');
+            }
+
+            return;
         }
     };
-
-    eventSource.onerror = (error) => {
-        console.error('EventSource error:', error);
-        updateStatus('Error de conexión', 'disconnected');
-    };
-}
-
-async function registerSession() {
-    await fetch(`http://localhost:8080/user-session-service/sessions`, {
-        method: 'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ sessionId, userId })
-    });
-
-    updateStatus('Registrado (UP)', 'up');
-    joinQueueBtn.disabled = false;
-    disconnectBtn.disabled = false;
-
-    subscribeToSessionUpdates();
 }
 
 function connectChat() {
-    if(!roomId) {
-        alert('No hay roomId');
-        return;
-    }
+    console.log("WEBSOCKET CONNECT");
     const socket = new SockJS('http://localhost:8080/chat-service/websocket');
     stompClient = Stomp.over(socket);
 
-    stompClient.connect({}, frame =>{
-        chatDiv.style.display='block';
-        connectChatBtn.style.display='none';
-        disconnectChatBtn.style.display='inline-block';
+    stompClient.connect({}, () => {
+        chatDiv.style.display = 'block';
+        searchBtn.disabled = true;
+        leaveBtn.disabled = false;
 
-        stompClient.subscribe(`/topic/match/${roomId}`, msg=>{
+        stompClient.subscribe(`/topic/match/${roomId}`, msg => {
             const m = JSON.parse(msg.body);
             const div = document.createElement('div');
             div.textContent = `${m.sender}: ${m.content}`;
@@ -89,31 +95,32 @@ function connectChat() {
     });
 }
 
-function disconnectChat() {
-    if(stompClient) stompClient.disconnect();
-    chatDiv.style.display='none';
-    connectChatBtn.style.display='inline-block';
-    disconnectChatBtn.style.display='none';
+function leaveChat() {
+    if(stompClient) {
+        stompClient.disconnect();
+        stompClient = null;
+    }
+
+    chatDiv.style.display = 'none';
+    messagesDiv.innerHTML = '';
+    roomSpan.textContent = '-';
+
+    setSessionStatus('UP');
+    searchBtn.disabled = false;
+    leaveBtn.disabled = true;
 }
 
 function sendMessage() {
     const content = messageInput.value.trim();
-    if(!content || !stompClient) return;
+    if (!content || !stompClient) return;
 
-    stompClient.send(`/app/match/${roomId}`, {}, JSON.stringify({sender:userId,content}));
-    messageInput.value='';
+    stompClient.send(`/app/match/${roomId}`, {}, JSON.stringify({sender: userId, content}));
+    messageInput.value = '';
 }
 
-connectBtn.addEventListener('click', registerSession);
-joinQueueBtn.addEventListener('click', ()=>setSessionStatus('AVAILABLE'));
-disconnectBtn.addEventListener('click', () => {
-    setSessionStatus('DISCONNECTED');
-    if(eventSource) {
-        eventSource.close();
-        eventSource = null;
-    }
-});
-connectChatBtn.addEventListener('click', connectChat);
-disconnectChatBtn.addEventListener('click', disconnectChat);
+searchBtn.addEventListener('click', () => setSessionStatus('AVAILABLE'));
+leaveBtn.addEventListener('click', leaveChat);
 sendBtn.addEventListener('click', sendMessage);
-messageInput.addEventListener('keypress', e=>{ if(e.key==='Enter') sendMessage() });
+messageInput.addEventListener('keypress', e => { if(e.key==='Enter') sendMessage() });
+
+registerSession();

@@ -3,6 +3,7 @@ package dev.skoleff.chat_service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.scheduling.TaskScheduler;
@@ -14,7 +15,12 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     private TaskScheduler messageBrokerTaskScheduler;
+
+    public WebSocketConfig(KafkaTemplate<String, Object> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
+    }
 
     @Autowired
     public void setMessageBrokerTaskScheduler(@Lazy TaskScheduler taskScheduler) {
@@ -38,7 +44,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(new MyChannelInterceptor());
+        registration.interceptors(new MyChannelInterceptor(kafkaTemplate));
     }
 
 

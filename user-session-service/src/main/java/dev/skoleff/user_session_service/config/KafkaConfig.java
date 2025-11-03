@@ -30,11 +30,14 @@ public class KafkaConfig {
         return new NewTopic("user.exit_match", 1, (short) 1);
     }
 
-
-
     @Bean
     public NewTopic roomCreatedTopic(){
         return new NewTopic("room.created", 1, (short) 1);
+    }
+
+    @Bean
+    public NewTopic UserDisconnectedTopic(){
+        return new NewTopic("user.disconnected", 1, (short) 1);
     }
 }
 

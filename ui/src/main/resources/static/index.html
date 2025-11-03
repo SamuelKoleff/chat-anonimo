@@ -6,7 +6,7 @@
     <title>Chat Reactivo</title>
     <style>
         body { font-family: sans-serif; margin: 20px; }
-        input, button { margin: 5px; padding: 5px; }
+        button { margin: 5px; padding: 5px; }
         .status { padding: 5px; margin: 5px 0; display: inline-block; }
         .up { color: white; background : blue; }
         .matched { color: white; background: green; }
@@ -19,20 +19,12 @@
 <h2>Chat Reactivo con SockJS</h2>
 
 <div>
-    <button id="connectBtn">Conectar (UP)</button>
-    <button id="joinQueueBtn" disabled>Unirse a Cola (AVAILABLE)</button>
-    <button id="disconnectBtn" disabled>Desconectar</button>
+    <button id="searchBtn">Buscar</button>
+    <button id="leaveBtn" disabled>Salir</button>
 </div>
 
-<div id="status" class="status">No registrado</div>
-<div>
-    <strong>Room:</strong> <span id="roomId">-</span>
-</div>
-
-<div>
-    <button id="connectChatBtn" disabled>Conectar Chat</button>
-    <button id="disconnectChatBtn" style="display:none;">Desconectar Chat</button>
-</div>
+<div id="status" class="status">Conectando…</div>
+<div><strong>Room:</strong> <span id="roomId">-</span></div>
 
 <div id="chat" style="display:none;">
     <input type="text" id="messageInput" placeholder="Mensaje...">
